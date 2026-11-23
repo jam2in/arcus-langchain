@@ -17,14 +17,19 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    "arcus-py>=0.1.0",
     "langchain-core>=0.3,<2",
 ]
 
 [dependency-groups]
 dev = [
+    "pytest>=8",
     "ruff==0.17.1",
     "ty==0.0.90",
 ]
+
+[tool.uv.sources]
+arcus-py = { git = "https://github.com/jam2in/arcus-py", branch = "develop" }
 
 [tool.uv.build-backend]
 module-name = "langchain_arcus"
@@ -44,6 +49,10 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-config --strict-markers --import-mode=importlib"
 
 [tool.ty.terminal]
 error-on-warning = true
