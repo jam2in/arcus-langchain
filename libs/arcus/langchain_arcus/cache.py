@@ -8,7 +8,8 @@ from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 from langchain_core.embeddings import Embeddings
 from langchain_core.load import dumpd, load
 
-DEFAULT_NAME: Final = "llmcache"
+DEFAULT_CACHE_NAME: Final = "arcus-cache"
+DEFAULT_SEMANTIC_CACHE_NAME: Final = "arcus-semantic"
 DEFAULT_DISTANCE_THRESHOLD: Final = 0.2
 
 
@@ -24,17 +25,35 @@ def _load(value: list[dict[str, Any]]) -> RETURN_VAL_TYPE:
     return [load(generation, allowed_objects="core") for generation in value]
 
 
+def _validate_name(name: str) -> None:
+    if not name or ":" in name:
+        raise ValueError(f"Name must be non-empty and contain no ':': {name!r}")
+
+
 class ArcusCache(BaseCache):
     """Cache LLM generations in Arcus."""
 
+    def __init__(self, client: Arcus, *, name: str = DEFAULT_CACHE_NAME) -> None:
+        _validate_name(name)
+        self._client = client
+        self._name = name
+
+    def _key(self, prompt: str, llm_string: str) -> str:
+        return f"{self._name}:{_hash(llm_string)}-{_hash(prompt)}"
+
     def lookup(self, prompt: str, llm_string: str) -> RETURN_VAL_TYPE | None:
-        raise NotImplementedError
+        value = self._client.get(self._key(prompt, llm_string))
+        if value is None:
+            return None
+        return _load(value)
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
-        raise NotImplementedError
+        key = self._key(prompt, llm_string)
+        if not self._client.set(key, _dump(return_val)):
+            raise ArcusError(f"Failed to store the generations: {key!r}")
 
     def clear(self, **kwargs: Any) -> None:
-        raise NotImplementedError
+        self._client.flush(self._name)
 
 
 class ArcusSemanticCache(BaseCache):
@@ -48,12 +67,11 @@ class ArcusSemanticCache(BaseCache):
         client: Arcus,
         embeddings: Embeddings,
         *,
-        name: str = DEFAULT_NAME,
+        name: str = DEFAULT_SEMANTIC_CACHE_NAME,
         distance_threshold: float = DEFAULT_DISTANCE_THRESHOLD,
         metric: Metric = Metric.COSINE,
     ) -> None:
-        if not name or ":" in name:
-            raise ValueError(f"Name must be non-empty and contain no ':': {name!r}")
+        _validate_name(name)
         self._client = client
         self._embeddings = embeddings
         self._name = name

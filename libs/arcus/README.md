@@ -5,6 +5,17 @@
 
 > Status: pre-alpha.
 
+## Cache
+
+```python
+from arcus import Arcus
+from langchain_core.globals import set_llm_cache
+from langchain_arcus import ArcusCache
+
+client = Arcus("127.0.0.1:2181", "test")
+set_llm_cache(ArcusCache(client))
+```
+
 ## Semantic cache
 
 ```python
@@ -17,7 +28,7 @@ client = Arcus("127.0.0.1:2181", "test")
 set_llm_cache(ArcusSemanticCache(client, OpenAIEmbeddings(), distance_threshold=0.2))
 ```
 
-`clear()` flushes every item under the cache's `name` prefix.
+`clear()` on either cache flushes every item under its `name` prefix.
 
 ## Development
 
