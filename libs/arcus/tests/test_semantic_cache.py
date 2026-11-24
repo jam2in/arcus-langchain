@@ -68,6 +68,16 @@ class FakeArcus:
         elements[vkey] = vector
         return True
 
+    def flush(self, prefix: str | None = None, *, delay: int = 0) -> bool:
+        assert prefix is not None
+        keys = [key for key in self.items if key.startswith(f"{prefix}:")]
+        indexes = [index for index in self.indexes if index.startswith(f"{prefix}:")]
+        for key in keys:
+            del self.items[key]
+        for index in indexes:
+            del self.indexes[index]
+        return bool(keys or indexes)
+
     def vop_search(
         self, index: str, query: Sequence[float], count: int
     ) -> list[tuple[str, float, None]] | None:
@@ -190,6 +200,15 @@ def test_invalid_name(client: FakeArcus, name: str) -> None:
         make_cache(client, name=name)
 
 
-def test_clear_not_supported(client: FakeArcus) -> None:
-    with pytest.raises(NotImplementedError):
-        make_cache(client).clear()
+def test_clear_flushes_only_its_name(client: FakeArcus) -> None:
+    cache = make_cache(client)
+    other = make_cache(client, name="other")
+    cache.update("capital of France", "llm", [Generation(text="Paris")])
+    other.update("capital of France", "llm", [Generation(text="Paris")])
+
+    cache.clear()
+    assert cache.lookup("capital of France", "llm") is None
+    assert other.lookup("capital of France", "llm") == [Generation(text="Paris")]
+
+    cache.update("capital of France", "llm", [Generation(text="Paris")])
+    assert cache.lookup("capital of France", "llm") == [Generation(text="Paris")]
