@@ -100,4 +100,4 @@ class ArcusSemanticCache(BaseCache):
             raise ArcusError(f"Failed to store the prompt vector in {index!r}")
 
     def clear(self, **kwargs: Any) -> None:
-        raise NotImplementedError("ArcusSemanticCache does not support clear() yet")
+        self._client.flush(self._name)

@@ -17,7 +17,7 @@ client = Arcus("127.0.0.1:2181", "test")
 set_llm_cache(ArcusSemanticCache(client, OpenAIEmbeddings(), distance_threshold=0.2))
 ```
 
-`clear()` is not supported yet.
+`clear()` flushes every item under the cache's `name` prefix.
 
 ## Development
 

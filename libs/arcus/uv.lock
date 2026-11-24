@@ -31,7 +31,7 @@ wheels = [
 [[package]]
 name = "arcus-py"
 version = "0.1.0"
-source = { git = "https://github.com/jam2in/arcus-py?branch=develop#e75aa33c241fec46297e24da9fb77bad019a32cf" }
+source = { git = "https://github.com/jam2in/arcus-py?branch=develop#7b919f8701bd702bc841f9cdaef61df33acaafec" }
 dependencies = [
     { name = "kazoo" },
     { name = "logger" },
